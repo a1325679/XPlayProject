@@ -7,6 +7,19 @@ extern "C"
 }
 #pragma comment(lib,"avcodec.lib")
 #pragma comment(lib,"avutil.lib")
+
+
+void XFreePacket(AVPacket** pkt)
+{
+	if (!pkt || !(*pkt))return;
+	av_packet_free(pkt);
+}
+void XFreeFrame(AVFrame** frame)
+{
+	if (!frame || !(*frame))return;
+	av_frame_free(frame);
+}
+
 void XDecoder::Close() {
 	mux.lock();
 	if (codec) {

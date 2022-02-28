@@ -9,7 +9,9 @@ class XPlayProject : public QWidget
 
 public:
     XPlayProject(QWidget *parent = Q_NULLPTR);
+    ~XPlayProject();
 
-private:
     Ui::XPlayProjectClass ui;
+public slots:
+    void OpenFile();
 };

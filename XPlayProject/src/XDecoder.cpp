@@ -61,7 +61,7 @@ bool XDecoder::Open(AVCodecParameters* para) {
 	codec = avcodec_alloc_context3(code);
 
 	//配置解码器上下文参数 avcodec_parameters_to_context(然后可以释放para)
-	int ret = avcodec_parameters_to_context(codec,0);
+	int ret = avcodec_parameters_to_context(codec, para);
 
 	avcodec_parameters_free(&para);
 	//设置解码器线程数
@@ -84,36 +84,36 @@ bool XDecoder::Send(AVPacket* pkt) {
 	if (pkt == NULL || pkt->data == NULL || pkt->size <= 0) {
 		return false;
 	}
+	mux.lock();
 	//codec是否初始化
 	if (codec == NULL) {
-		return false;
-	}
-	mux.lock();
-	//发送pkt到codec中 avcodec_send_packet()
-	int ret = avcodec_send_packet(codec,pkt);
-	//释放pkt;
-	av_packet_free(&pkt);
-	if (ret != 0) {
 		mux.unlock();
 		return false;
 	}
+	//发送pkt到codec中 avcodec_send_packet()
+	int ret = avcodec_send_packet(codec,pkt);
+	//释放pkt;
 	mux.unlock();
+	av_packet_free(&pkt);
+	if (ret != 0) {
+		return false;
+	}
 	return true;
 }
 AVFrame* XDecoder::Recv() {
+	mux.lock();
 	//判断codec是否初始化
 	if (codec == NULL) {
+		mux.unlock();
 		return NULL;
 	}
-	mux.lock();
 	//创建AVFrame并为其分配内存空间av_frame_alloc();
 	AVFrame* frame = av_frame_alloc();
 	//接受codec中的数据
 	int ret = avcodec_receive_frame(codec, frame);
-
+	mux.unlock();
 	if (ret != 0) {
 		av_frame_free(&frame);
-		mux.unlock();
 		return NULL;
 	}
 	pts = frame->pts;

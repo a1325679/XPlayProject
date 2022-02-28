@@ -9,11 +9,14 @@ struct AVCodecParameters;
 #include"XDecodeThread.h"
 class XVideoThread:public XDecodeThread
 {
+public:
 	bool Open(AVCodecParameters* ac, XVideoWidget* xv, int widthj, int height);
 	void run();
 	void Push(AVPacket* pkt);
 	void setPause(bool isPause);
-	bool RepaintPts(AVPacket* pkt, ll seekPts);
+
+	//跳转到对应的位置
+	//bool RepaintPts(AVPacket* pkt, ll seekPts);//
 
 	XVideoThread();
 	~XVideoThread();

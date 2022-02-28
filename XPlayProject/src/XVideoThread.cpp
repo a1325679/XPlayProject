@@ -57,11 +57,11 @@ void XVideoThread::run() {
 			msleep(5);
 			continue;
 		}
-		if (synpts > 0 && decode->pts > synpts) {
-			vmux.unlock();
-			msleep(1);
-			continue;
-		}
+		//if (synpts > 0 && decode->pts > synpts) {
+		//	vmux.unlock();
+		//	msleep(1);
+		//	continue;
+		//}
 		AVPacket* pkt = Pop();
 		bool ret = decode->Send(pkt);
 		if (!ret)
@@ -75,6 +75,7 @@ void XVideoThread::run() {
 			if (!frame)break;
 			if (video) {
 				video->Repaint(frame);
+
 			}
 		}
 		vmux.unlock();
@@ -83,7 +84,6 @@ void XVideoThread::run() {
 XVideoThread::XVideoThread()
 {
 }
-
 XVideoThread::~XVideoThread()
 {
 	//等待线程退出

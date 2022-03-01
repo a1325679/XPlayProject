@@ -83,12 +83,21 @@ bool XDemux::Open(const char* path) {
 	width = vs->codecpar->width;
 	height = vs->codecpar->height;
 	this->totalMs = px->duration / (AV_TIME_BASE / 1000);
+	//获取音频流
 
+	audioStream = av_find_best_stream(px, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+	AVStream* as= px->streams[audioStream];
 
-	//获取音频流和信息
-
-
-
+	sampleRate = as->codecpar->sample_rate;
+	channels = as->codecpar->channels;
+	cout << "codec_id = " << as->codecpar->codec_id << endl;
+	cout << "format = " << as->codecpar->format << endl;
+	cout << "sample_rate = " << as->codecpar->sample_rate << endl;
+	//AVSampleFormat;
+	cout << "channels = " << as->codecpar->channels << endl;
+	//一帧数据？？ 单通道样本数 
+	cout << "frame_size = " << as->codecpar->frame_size << endl;
+	//1024 * 2 * 2 = 4096  fps = sample_rate/frame_size
 	mux.unlock();
 	return true;
 }

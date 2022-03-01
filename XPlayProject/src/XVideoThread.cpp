@@ -57,11 +57,11 @@ void XVideoThread::run() {
 			msleep(5);
 			continue;
 		}
-		//if (synpts > 0 && decode->pts > synpts) {
-		//	vmux.unlock();
-		//	msleep(1);
-		//	continue;
-		//}
+		if (synpts > 0 && decode->pts > synpts) {
+			vmux.unlock();
+			msleep(1);
+			continue;
+		}
 		AVPacket* pkt = Pop();
 		bool ret = decode->Send(pkt);
 		if (!ret)

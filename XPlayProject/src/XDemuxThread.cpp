@@ -1,16 +1,16 @@
 #include "XDemuxThread.h"
 #include "XDemux.h"
 #include "XVideoThread.h"
+#include "XAudioThread.h"
 #include <iostream>
 #include "XVideoWidget.h"
-
 
 using namespace std;
 
 void XDemuxThread::setPause(bool isPause) {
 	mux.lock();
 	this->isPause = isPause;
-
+	if (at)	at->setPause(isPause);
 	if (vt)vt->setPause(isPause);
 	mux.unlock();
 }
@@ -20,6 +20,7 @@ bool XDemuxThread::Open(const char* url, XVideoWidget* call) {
 	mux.lock();
 	if (!demux) demux = new XDemux();
 	if (!vt) vt = new XVideoThread();
+	if (!at) at = new XAudioThread();
 	//打开解封装
 	bool ret = demux->Open(url);
 	if (!ret)
@@ -34,6 +35,12 @@ bool XDemuxThread::Open(const char* url, XVideoWidget* call) {
 		ret = false;
 		cout << "vt->Open failed!" << endl;
 	}
+	//打开音频解码器和处理线程
+	if (!at->Open(demux->CopyAPara(), demux->sampleRate, demux->channels))
+	{
+		ret = false;
+		cout << "at->Open failed!" << endl;
+	}
 	mux.unlock();
 	totalMs = demux->totalMs;
 	cout << "XDemuxThread::Open " << ret << endl;
@@ -44,9 +51,11 @@ void XDemuxThread::Start() {
 	mux.lock();
 	if (!demux) demux = new XDemux();
 	if (!vt) vt = new XVideoThread();
+	if (!at) at = new XAudioThread();
 	//启动当前线程
 	QThread::start();
 	if (vt)vt->start();
+	if (at)at->start();
 	mux.unlock();
 
 }
@@ -66,11 +75,11 @@ void XDemuxThread::run() {
 			msleep(5);
 			continue;
 		}
+		if (vt && at) {
+			pts = at->pts;
+			vt->synpts = at->pts;
+		}
 		AVPacket* pkt = demux->Read();
-		//if (vt ){
-		//	pts = vt->decode->pts;
-		//	vt->synpts = pts;
-		//}
 		if (!pkt)
 		{
 			mux.unlock();
@@ -80,7 +89,7 @@ void XDemuxThread::run() {
 		//判断数据是音频
 		if (demux->IsAudio(pkt))
 		{
-			//if (at)at->Push(pkt);
+			if (at)at->Push(pkt);
 		}
 		else //视频
 		{
@@ -97,9 +106,12 @@ void XDemuxThread::Close()
 	isExit = true;
 	wait();
 	if (vt) vt->Close();
+	if (at) at->Close();
 	mux.lock();
 	delete vt;
+	delete at;
 	vt = NULL;
+	at = NULL;
 	mux.unlock();
 }
 
@@ -122,5 +134,6 @@ void XDemuxThread::Clear()
 	mux.lock();
 	if (demux)demux->Clear();
 	if (vt) vt->Clear();
+	if (at) at->Clear();
 	mux.unlock();
 }

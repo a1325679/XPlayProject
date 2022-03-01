@@ -4,6 +4,7 @@
 class XDemux;
 class XVideoThread;
 class XVideoWidget;
+class XAudioThread;
 class XDemuxThread:public QThread
 {
 public:
@@ -25,6 +26,7 @@ public:
 	std::mutex mux;
 	XDemux* demux = NULL;
 	XVideoThread* vt = NULL;
+	XAudioThread* at = NULL;
 	bool isPause = false;
 };
 

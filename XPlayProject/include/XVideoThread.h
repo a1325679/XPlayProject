@@ -16,7 +16,7 @@ public:
 	void setPause(bool isPause);
 
 	//跳转到对应的位置
-	//bool RepaintPts(AVPacket* pkt, ll seekPts);//
+	bool RepaintPts(AVPacket* pkt, ll seekPts);
 
 	XVideoThread();
 	~XVideoThread();

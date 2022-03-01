@@ -9,6 +9,8 @@ class XDemuxThread:public QThread
 {
 public:
 	bool Open(const char* url, XVideoWidget* call);
+
+	void Seek(double pos);
 	void Start();
 	void Close();
 	virtual void Clear();

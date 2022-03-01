@@ -146,6 +146,22 @@ void XDemux::Clear()
 	//清理读取缓冲
 	avformat_flush(px);
 }
-bool XDemux::Seek(double pos) {
+
+bool XDemux::Seek(double pos)
+{
+	mux.lock();
+	if (!px)
+	{
+		mux.unlock();
+		return false;
+	}
+	//清理读取缓冲
+	avformat_flush(px);
+
+	long long seekPos = 0;
+	seekPos = px->streams[videoStream]->duration * pos;
+	int re = av_seek_frame(px, videoStream, seekPos, AVSEEK_FLAG_BACKWARD | AVSEEK_FLAG_FRAME);
+	mux.unlock();
+	if (re < 0) return false;
 	return true;
 }

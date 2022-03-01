@@ -137,3 +137,49 @@ void XDemuxThread::Clear()
 	if (at) at->Clear();
 	mux.unlock();
 }
+void XDemuxThread::Seek(double pos)
+{
+	//清理缓存
+	Clear();
+
+	mux.lock();
+	bool status = this->isPause;
+	mux.unlock();
+	//暂停
+	setPause(true);
+
+	mux.lock();
+	if (demux)
+		demux->Seek(pos);
+	//实际要显示的位置pts
+	long long seekPts = pos * demux->totalMs;
+	while (!isExit)
+	{
+		AVPacket* pkt = demux->ReadVideo();
+		if (!pkt) break;
+		//如果解码到seekPts
+		if (vt->RepaintPts(pkt, seekPts))
+		{
+			this->pts = seekPts;
+			break;
+		}
+		//bool re = vt->decode->Send(pkt);
+		//if (!re) break;
+		//AVFrame *frame = vt->decode->Recv();
+		//if (!frame) continue;
+		////到达位置
+		//if (frame->pts >= seekPts)
+		//{
+		//	this->pts = frame->pts;
+		//	vt->call->Repaint(frame);
+		//	break;
+		//}
+		//av_frame_free(&frame);
+	}
+
+	mux.unlock();
+
+	//seek是非暂停状态
+	if (!status)
+		setPause(false);
+}
